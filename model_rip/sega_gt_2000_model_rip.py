@@ -56,7 +56,7 @@ class Material:
 
 
 class VertexElement:
-    fmt = [ # optimize for SH4
+    formats = [ # optimize for SH4
             '<4f',     #00: x,y,z,1.0F, ...              correct?
             '<8f',     #01: x,y,z,1.0F,nx,ny,nz,0.0F,... correct?
 
@@ -80,6 +80,7 @@ class VertexElement:
             '<3f2I',   #17: x,y,z,nxyz32,D8888,...
             '<3f2I'    #18: x,y,z,nxyz32,UserFlags32,...
           ]
+    
     def __init__(self):
         self.position = [0.0, 0.0, 0.0]
         self.normal = [0.0, 0.0, 0.0]
@@ -92,7 +93,7 @@ class VertexElement:
         #print('Vertex Type:{0:#0X} Vertex Adr: {1:#010X}'.format(vtx_type, file.tell()))
         if (vtx_type > 18):
             return True
-        _fmt = self.fmt[vtx_type]
+        _fmt = self.formats[vtx_type]
         bytes = file.read(struct.calcsize(_fmt))
         buff = struct.unpack_from(_fmt, bytes, 0)
         self.position = [buff[0], buff[1], buff[2]]
@@ -107,7 +108,6 @@ class Vertex:
         self.size = 0x00 # needs "(this_value - 1) * 4" to byte size
         self.user_offset = 0x00
         self.elements = []
-
 
     def unpack(self, file: typing.IO) -> bool:
         bytes = file.read(struct.calcsize(self.fmt))
@@ -125,7 +125,9 @@ class Vertex:
             if (file.tell() > end_adr):
                 return True
             vtx = VertexElement()
-            vtx.unpack(file, vtx_type)
+            result = vtx.unpack(file, vtx_type)
+            if result:
+                return True
             self.elements.append(vtx)
         if( file.tell() < end_adr):
             return True
@@ -165,7 +167,7 @@ class Strip:
     fmt = '<2B2H'
 
     def __init__(self):
-        self.chunck_flags = 0x00
+        self.chunk_flags = 0x00
         self.chunk_head = 0x00
         self.size = 0x00
         self.user_offset = 0x00
@@ -175,11 +177,16 @@ class Strip:
     def unpack(self, file: typing.IO) -> None:
         bytes = file.read(struct.calcsize(self.fmt))
         buff = struct.unpack_from(self.fmt, bytes, 0)
-        # TDOO Store
-        # TODO unapck strip elemnts
-        #elment = StripElemnt()
-        size = buff[2]
-        self.size = size
+        self.size = buff[2]
+        self.user_offset = ((buff[3] & 0xC0) >> 14)
+        self.count_strip = buff[3] & 0x3F
+        end_adr = file.tell() + (self.size-1) * 4
+
+
+        # TDOO: Store
+        # TODO: unapck strip elemnts
+        size = self.size
+        #self.size = size
         skip = (size-1) * 2
         file.seek(skip, io.SEEK_CUR)
 
@@ -295,21 +302,29 @@ class Model:
         
 
 
+# FACE(Parsing Strip) DEVLOP
+offset = 0x6530
+#for safe
+max_polygon_count = 1
+max_chunk_count = 1000
+filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
+
+
 # CAR
 #offset = 0x134
 #for safe
 #max_polygon_count = 60
 #max_chunk_count = 1000
-#filename = r"format\carmodel\00000000_toppo_bj\00000000_topo_bj.bin"
+#filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
 #filename = r"format\carmodel\00000456_ralliart_gto\00000456_ralliart_gto.bin"
 
 # COURSE
-offset = 0x1C20
-#for safe
-max_polygon_count = 2000
-max_chunk_count = 1000
-##filename = r"format\track\night_section_a_001\00000000\00000000.bin" # Night Section A
-filename = r"format\track\SonyGT2\00000152\00000000.bin" # SonyGT2
+#offset = 0x1C20
+##for safe
+#max_polygon_count = 2000
+#max_chunk_count = 1000
+#filename = r"format\track\night_section_a_001\00000000\00000000.bin" # Night Section A
+##filename = r"format\track\SonyGT2\00000152\00000000.bin" # SonyGT2
 ##filename = r"extract_empire\STR1\00000156\00000000.bin"
 
 # Path
