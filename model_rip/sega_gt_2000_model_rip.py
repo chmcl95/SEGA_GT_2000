@@ -242,7 +242,7 @@ class Strip:
         self.elements = []
     
     def unpack(self, file: typing.IO, strip_type: int) -> bool:
-        print('Strip Type:{0:#04X} Strip Adr: {1:#010X}'.format(strip_type, file.tell()))
+        #print('Strip Type:{0:#04X} Strip Adr: {1:#010X}'.format(strip_type, file.tell()))
         bytes = file.read(struct.calcsize(self.fmt))
         buff = struct.unpack_from(self.fmt, bytes, 0)
         self.flag = buff[0]&0xC0
@@ -457,15 +457,60 @@ for i, polygon in enumerate(model.polygons):
     
     normals = []
     uvs = []
-    #vertex
+    idxs = []
     vtxs = []
     #print('vertex count:{0}'.format(len(polygon.vertex.vertexs[0].elements)))
     for vtx in polygon.vertex.vertexs[0].elements:
         v = bm.verts.new(vtx.position)
-        #vtxs.append(v)
-        #normals.append(vtx.normal)
-        #uvs.append(vtx.uv)
+        vtxs.append(v)
 
+    for strip in polygon.meshs[0].chunk_strips[0].strips:
+        is_cw = False
+        for vtx_cnt, element in enumerate(strip.elements):
+            #Generate Face
+            if vtx_cnt > 1:
+                #print('is_cs: {0}'.format(is_cw))
+                v2 = vtxs[element.idx]
+                if is_cw == True:
+                    face = bm.faces.new((v2, v1, v0))
+                    is_cw = False
+                else:
+                    print('v0 {0} v1 {1} v2 {2}'.format(v0, v1 ,v2))
+                    face = bm.faces.new((v0, v1, v2))
+                    is_cw = True
+                #face.material_index = idx
+                #if vtx_cnt == 2:
+                    ##compare blender face and rrv model normal
+                    #_normals = mesh_data.normals[-3:]
+                    #_face_normal = sum(_normals, mathutils.Vector()) / 3.0
+                    #_bl_face_normal = mathutils.geometry.normal(v0.co, v1.co, v2.co)
+                    #dot_res = _bl_face_normal.dot(_face_normal)
+                    #if (dot_res < 0):
+                    #    #flipping generated face
+                    #    face.normal_flip()
+                    #    #inversing next faces
+                    #    is_cw = False if is_cw else True
+                v0 = v1
+                v1 = v2
+            elif vtx_cnt == 1:
+                v1 = vtxs[element.idx]
+            elif vtx_cnt == 0:
+                v0 = vtxs[element.idx]
+            idxs.append(element.idx)
+
+
+
+
+    #print(idxs)
+    #for i in range(len(idxs)):
+    #    if((i+3) > len(idxs)):
+    #        break
+    #    v0 = vtxs[idxs[i]]
+    #    v1 = vtxs[idxs[i+1]]
+    #    v2 = vtxs[idxs[i+2]]
+    #    bm.faces.new((v0, v1, v2))
+
+    
     bm.to_mesh(bl_mesh)
     bm.free()
     
