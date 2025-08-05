@@ -90,12 +90,12 @@ class VertexElement:
         self.specular_color = [0.0, 0.0, 0.0, 0.0]
 
     def unpack(self, file: typing.IO, vtx_type: int) -> bool:
-        #print('Vertex Type:{0:#0X} Vertex Adr: {1:#010X}'.format(vtx_type, file.tell()))
+        #print('Vertex Type:{0:#04X} Vertex Adr: {1:#010X}'.format(vtx_type, file.tell()))
         if (vtx_type > 18):
             return True
-        _fmt = self.formats[vtx_type]
-        bytes = file.read(struct.calcsize(_fmt))
-        buff = struct.unpack_from(_fmt, bytes, 0)
+        fmt = self.formats[vtx_type]
+        bytes = file.read(struct.calcsize(fmt))
+        buff = struct.unpack_from(fmt, bytes, 0)
         self.position = [buff[0], buff[1], buff[2]]
         return False
         
@@ -107,6 +107,7 @@ class Vertex:
         self.chunk_head = 0x00
         self.size = 0x00 # needs "(this_value - 1) * 4" to byte size
         self.user_offset = 0x00
+        self.length = 0x00 # nbIndices
         self.elements = []
 
     def unpack(self, file: typing.IO) -> bool:
@@ -118,10 +119,10 @@ class Vertex:
         self.user_offset = buff[3]
         end_adr = file.tell() + (self.size-1) * 4
         vtx_type = buff[0]-0x20
-        count_vertex = buff[4]
+        self.length = buff[4]
         #print('value: "count_vertex" {0:#X}'.format(count_vertex))
         #print('value: "end_adr" {0:#X}'.format(end_adr))
-        for i in range(count_vertex):
+        for i in range(self.length):
             if (file.tell() > end_adr):
                 return True
             vtx = VertexElement()
@@ -155,15 +156,109 @@ class Volume:
 
 
 # Elment of "Chunk Strip"
-class StripElemnt:
+class StripElement:
+    fmt1 = '<1H'
+    fmt2 = '<3H'
+    fmt3 = '<1H3h'
+    fmt4 = '<3H3h'
+    fmt5 = '<1H4B'
+    fmt6 = '<3H4B'
+    fmt7 = '<5H'
+    fx_UV = 0xFF
+    fx_UVH = 0x40
+    fx_VN = 0x8000
+    fx_D8 = 0xFF
+    
+    formats = [
+                fmt1, fmt2, fmt2, #0-2
+                fmt3, fmt4, fmt4, #3-5
+                fmt5, fmt6, fmt6, #6-8
+                fmt1, fmt7, fmt7  #9-11
+              ]
+    
     def __init__(self):
         self.idx = 0x00
         self.uv = [0.0, 0.0]
+        self.uv2 = [0.0, 0.0]
         self.normal = [0.0, 0.0, 0.0]
-        self.user_flag = 0x00
+        self.color = [0.0, 0.0, 0.0, 0.0]
+        self.user_flag2 = 0x00
+        
+    def unpack(self, file: typing.IO, strip_type: int, n: int) -> bool:
+        if (strip_type > 12 or strip_type > 0):
+            return True
+        fmt = self.formats[strip_type]
+        bytes = file.read(struct.calcsize(fmt))
+        buff = struct.unpack_from(fmt, bytes, 0)
+        
+        if (strip_type == 0):
+            self.idx = buff[0]
+        elif (strip_type == 1):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UV, buff[2]/self.fx_UV]
+        elif (strip_type == 2):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UVH, buff[2]/self.fx_UVH]
+        elif (strip_type == 3):
+            self.idx = buff[0]
+            self.normal = [buff[1]/self.fx_VN, buff[2]/self.fx_VN, buff[3]/self.fx_VN]
+        elif (strip_type == 4):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UV, buff[2]/self.fx_UV]            
+            self.normal = [buff[3]/self.fx_VN, buff[4]/self.fx_VN, buff[5]/self.fx_VN]
+        elif (strip_type == 5):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UVH, buff[2]/self.fx_UVH]            
+            self.normal = [buff[3]/self.fx_VN, buff[4]/self.fx_VN, buff[5]/self.fx_VN]
+        elif (strip_type == 6):
+            self.idx = buff[0]
+            slef.color = [buff[1]/self.fx_D8, buff[2]/self.fx_D8, buff[3]/self.fx_D8, buff[4]/self.fx_D8]
+        elif (strip_type == 7):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UV, buff[2]/self.fx_UV]
+            slef.color = [buff[3]/self.fx_D8, buff[4]/self.fx_D8, buff[5]/self.fx_D8, buff[6]/self.fx_D8]
+        elif (strip_type == 8):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UV, buff[2]/self.fx_UV]
+            slef.color = [buff[3]/self.fx_D8, buff[4]/self.fx_D8, buff[5]/self.fx_D8, buff[6]/self.fx_D8]
+        elif (strip_type == 9):
+            self.idx = buff[0]
+        elif (strip_type == 10):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UV, buff[2]/self.fx_UV]
+            self.uv2 = [buff[3]/self.fx_UV, buff[4]/self.fx_UV]
+        elif (strip_type == 11):
+            self.idx = buff[0]
+            self.uv = [buff[1]/self.fx_UVH, buff[2]/self.fx_UVH]
+            self.uv2 = [buff[3]/self.fx_UVH, buff[4]/self.fx_UVH]
+        return False
+
+class Strip:
+    fmt = '<1h'
+    
+    def __init__(self):
+        self.flag = 0x00
+        self.length = 0x00
+        self.elements = []
+    
+    def unpack(self, file: typing.IO, strip_type: int) -> bool:
+        print('Strip Type:{0:#04X} Strip Adr: {1:#010X}'.format(strip_type, file.tell()))
+        bytes = file.read(struct.calcsize(self.fmt))
+        buff = struct.unpack_from(self.fmt, bytes, 0)
+        self.flag = buff[0]&0xC0
+        self.length = abs(buff[0])
+        #print('Strip Element Length:{0:#010X} Strip Adr: {1:#010X}'.format(self.length, file.tell()))
+        
+        for i in range(self.length):
+            element = StripElement()
+            result = element.unpack(file, strip_type, 0) # How do I get "N" values?
+            if result:
+                return True
+            self.elements.append(element)
+        return False
 
 # Chunk Strip (0x40 - 0x4B)
-class Strip:
+class ChunkStrip:
     fmt = '<2B2H'
 
     def __init__(self):
@@ -171,33 +266,41 @@ class Strip:
         self.chunk_head = 0x00
         self.size = 0x00
         self.user_offset = 0x00
-        self.count_strip = 0x00 # nbStrip
-        self.elments = []
+        self.length = 0x00 # nbStrip
+        self.strips = []
 
     def unpack(self, file: typing.IO) -> None:
         bytes = file.read(struct.calcsize(self.fmt))
         buff = struct.unpack_from(self.fmt, bytes, 0)
         self.size = buff[2]
         self.user_offset = ((buff[3] & 0xC0) >> 14)
-        self.count_strip = buff[3] & 0x3F
-        end_adr = file.tell() + (self.size-1) * 4
+        self.length = buff[3] & 0x3F
+        end_adr = file.tell() + (self.size-1) * 2
 
-
-        # TDOO: Store
-        # TODO: unapck strip elemnts
-        size = self.size
-        #self.size = size
-        skip = (size-1) * 2
-        file.seek(skip, io.SEEK_CUR)
+        strip_type = buff[0]-0x40
+        for i in range(self.length):
+            if (file.tell() > end_adr):
+                return True
+            strip = Strip()
+            result = strip.unpack(file, strip_type)
+            if result:
+                return True
+            self.strips.append(strip)
+        left_bytes = file.tell()%4
+        if (left_bytes != 0):
+            file.seek(left_bytes, io.SEEK_CUR)
+        if( file.tell() < end_adr):
+            return True
+        return False
 
 
 class Mesh:
     def __init__(self):
-        self.tinys = []
-        self.materials = []
+        self.chunk_tinys = []
+        self.chunk_materials = []
         self.vertexs = []
-        self.volumes = []
-        self.strips = []
+        self.chunk_volumes = []
+        self.chunk_strips = []
 
     # Chunk Head ... means "Sort of Commands".
     def detect_head(self, file: typing.IO) -> int:
@@ -223,12 +326,12 @@ class Mesh:
                 # Tiny
                 tiny = Tiny()
                 tiny.unpack(file)
-                self.tinys.append(tiny)
+                self.chunk_tinys.append(tiny)
             elif ( (chunk_head >= 0x10) and (chunk_head <= 0x1F) ):
                 # Material
                 material = Material()
                 material.unpack(file)
-                self.materials.append(material)
+                self.chunk_materials.append(material)
             elif ( (chunk_head >= 0x20) and (chunk_head <= 0x32) ):
                 # Vertex
                 vertex = Vertex()
@@ -240,15 +343,17 @@ class Mesh:
                 # Volume
                 volume = Volume()
                 volume.unpack(file)
-                self.volumes.append(volume)
+                self.chunk_volumes.append(volume)
             elif ( (chunk_head >= 0x40) and (chunk_head <= 0x4B) ):
-                # Strip
-                strip = Strip()
-                strip.unpack(file)
-                self.strips.append(strip)
+                # ChunkStrip
+                strip = ChunkStrip()
+                result = strip.unpack(file)
+                if result:
+                    return True
+                self.chunk_strips.append(strip)
             else:
                 print('Detect Unknown Chunk Head')
-                print('--- Chunk Head: {0:#010X} Chunk Adr: {1:#010X} ---'.format(file.tell(), chunk_head))
+                print('--- Chunk Head: {0:#04X} Chunk Adr: {1:#010X} ---'.format(chunk_head, file.tell()))
                 return True
             i = i + 1
 
