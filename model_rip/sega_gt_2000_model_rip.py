@@ -185,7 +185,8 @@ class StripElement:
         self.user_flag2 = 0x00
         
     def unpack(self, file: typing.IO, strip_type: int, n: int) -> bool:
-        if (strip_type > 12 or strip_type > 0):
+        if (strip_type > 12 or strip_type > 1):
+            print('Detect Unallowing Strip Type: {0}'.format(strip_type))
             return True
         fmt = self.formats[strip_type]
         bytes = file.read(struct.calcsize(fmt))
@@ -273,9 +274,10 @@ class ChunkStrip:
         bytes = file.read(struct.calcsize(self.fmt))
         buff = struct.unpack_from(self.fmt, bytes, 0)
         self.size = buff[2]
-        self.user_offset = ((buff[3] & 0xC0) >> 14)
-        self.length = buff[3] & 0x3F
+        self.user_offset = ((buff[3] & 0xC000) >> 14)
+        self.length = buff[3] & 0x3FFF
         end_adr = file.tell() + (self.size-1) * 2
+        #print('{0:#0X}'.format(end_adr))
 
         strip_type = buff[0]-0x40
         for i in range(self.length):
@@ -369,7 +371,7 @@ class Polygon:
         mesh = Mesh()
         result = mesh.unpack(file, max_chunk_count)
         if result:
-            print('Chunk Unpack Faild!!! File Position: {0:#X}'.format(file.tell()))
+            print('Unpack Chunk Faild!!! File Position: {0:#X}'.format(file.tell()))
             return True
         self.meshs.append(mesh)
         
@@ -377,7 +379,7 @@ class Polygon:
         #vtx = Mesh()
         result = self.vertex.unpack(file, max_chunk_count)
         if result:
-            print('Vertex Chunk Unpack Faild!!! File Position: {0:#X}'.format(file.tell()))
+            print('Unpack Vertex Unpack Faild!!! File Position: {0:#X}'.format(file.tell()))
             return True
         return False
 
@@ -408,9 +410,13 @@ class Model:
 
 
 # FACE(Parsing Strip) DEVLOP
-offset = 0x6530
-#for safe
-max_polygon_count = 1
+#offset = 0x6530
+#max_polygon_count = 16
+offset = 0x134
+max_polygon_count = 99
+#offset = 0x39EC
+#max_polygon_count = 1
+
 max_chunk_count = 1000
 filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
 
@@ -464,7 +470,8 @@ for i, polygon in enumerate(model.polygons):
         v = bm.verts.new(vtx.position)
         vtxs.append(v)
 
-
+    if(len(polygon.meshs[0].chunk_strips) < 1):
+        continue
     for i, strip in enumerate(polygon.meshs[0].chunk_strips[0].strips):
         is_cw = strip.flag > 1
         for vtx_cnt, element in enumerate(strip.elements):
