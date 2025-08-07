@@ -412,13 +412,13 @@ class Model:
 # FACE(Parsing Strip) DEVLOP
 #offset = 0x6530
 #max_polygon_count = 16
-offset = 0x134
-max_polygon_count = 99
+#offset = 0x134
+#max_polygon_count = 99
 #offset = 0x39EC
 #max_polygon_count = 1
 
-max_chunk_count = 1000
-filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
+#max_chunk_count = 1000
+#filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
 
 
 # CAR
@@ -430,13 +430,24 @@ filename = r"format\carmodel\00000000_toppo_bj\00000000_toppo_bj.bin"
 #filename = r"format\carmodel\00000456_ralliart_gto\00000456_ralliart_gto.bin"
 
 # COURSE
-#offset = 0x1C20
+offset = 0x1C20
 ##for safe
-#max_polygon_count = 2000
-#max_chunk_count = 1000
+max_polygon_count = 4000
+max_chunk_count = 1000
 #filename = r"format\track\night_section_a_001\00000000\00000000.bin" # Night Section A
-##filename = r"format\track\SonyGT2\00000152\00000000.bin" # SonyGT2
-##filename = r"extract_empire\STR1\00000156\00000000.bin"
+#filename = r"extract_empire\STR1\00000040\00000000.bin" # Night Section A
+#filename = r"extract_empire\STR1\00000008\00000000.bin" # Solid
+#filename = r"extract_empire\STR1\00000012\00000000.bin" # peak hill
+#filename = r"extract_empire\STR1\00000016\00000000.bin" # peak track
+#filename = r"extract_empire\STR1\00000020\00000000.bin" # great rock
+#filename = r"extract_empire\STR1\00000024\00000000.bin" # deap rock
+filename = r"extract_empire\STR1\00000028\00000000.bin" # snoy mountain
+
+
+
+
+#filename = r"format\track\SonyGT2\00000152\00000000.bin" # SonyGT2 course
+filename = r"extract_empire\STR1\00000156\00000000.bin" # yura course
 
 # Path
 path = "D:\Hack\SEGA\segaGT\\" + filename
@@ -463,47 +474,51 @@ for i, polygon in enumerate(model.polygons):
     
     normals = []
     uvs = []
-    idxs = []
     vtxs = []
     #print('vertex count:{0}'.format(len(polygon.vertex.vertexs[0].elements)))
     for vtx in polygon.vertex.vertexs[0].elements:
         v = bm.verts.new(vtx.position)
         vtxs.append(v)
 
-    if(len(polygon.meshs[0].chunk_strips) < 1):
-        continue
-    for i, strip in enumerate(polygon.meshs[0].chunk_strips[0].strips):
-        is_cw = strip.flag > 1
-        for vtx_cnt, element in enumerate(strip.elements):
-            #Generate Face
-            if vtx_cnt > 1:
-                #print('is_cs: {0}'.format(is_cw))
-                v2 = vtxs[element.idx]
-                if is_cw == True:
-                    face = bm.faces.new((v2, v1, v0))
-                    is_cw = False
-                else:
-                    face = bm.faces.new((v0, v1, v2))
-                    is_cw = True
-                #face.material_index = idx
-                #if vtx_cnt == 2:
-                    ##compare blender face and rrv model normal
-                    #_normals = mesh_data.normals[-3:]
-                    #_face_normal = sum(_normals, mathutils.Vector()) / 3.0
-                    #_bl_face_normal = mathutils.geometry.normal(v0.co, v1.co, v2.co)
-                    #dot_res = _bl_face_normal.dot(_face_normal)
-                    #if (dot_res < 0):
-                    #    #flipping generated face
-                    #    face.normal_flip()
-                    #    #inversing next faces
-                    #    is_cw = False if is_cw else True
-                v0 = v1
-                v1 = v2
-            elif vtx_cnt == 1:
-                v1 = vtxs[element.idx]
-            elif vtx_cnt == 0:
-                v0 = vtxs[element.idx]
-            idxs.append(element.idx)
+#    if(len(polygon.meshs[0].chunk_strips) < 1):
+#        continue
+    
+    for chunk_strip in polygon.meshs[0].chunk_strips:    
+        for i, strip in enumerate(chunk_strip.strips):
+            is_cw = strip.flag > 1
+            for vtx_cnt, element in enumerate(strip.elements):
+                #Generate Face
+                if vtx_cnt > 1:
+                    #print('is_cs: {0}'.format(is_cw))
+                    v2 = vtxs[element.idx]
+                    try:
+                        if is_cw == True:
+                            face = bm.faces.new((v2, v1, v0))
+                            is_cw = False
+                        else:
+                            face = bm.faces.new((v0, v1, v2))
+                            is_cw = True
+                    except ValueError as e:
+                        print(e)
+                        continue
+                    #face.material_index = idx
+                    #if vtx_cnt == 2:
+                        ##compare blender face and rrv model normal
+                        #_normals = mesh_data.normals[-3:]
+                        #_face_normal = sum(_normals, mathutils.Vector()) / 3.0
+                        #_bl_face_normal = mathutils.geometry.normal(v0.co, v1.co, v2.co)
+                        #dot_res = _bl_face_normal.dot(_face_normal)
+                        #if (dot_res < 0):
+                        #    #flipping generated face
+                        #    face.normal_flip()
+                        #    #inversing next faces
+                        #    is_cw = False if is_cw else True
+                    v0 = v1
+                    v1 = v2
+                elif vtx_cnt == 1:
+                    v1 = vtxs[element.idx]
+                elif vtx_cnt == 0:
+                    v0 = vtxs[element.idx]
 
 
 
