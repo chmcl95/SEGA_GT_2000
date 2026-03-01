@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SegaGT2000Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "unpack -r PCJP -i \"D:\\Hack\\SEGAPC\\SegaGT\\data\\archive\\STR3.BIN\" -e \"D:\\Hack\\SEGAPC\\SegaGT\\data\\archive\\SegaGT.exe\""
+    }
+  }
+}

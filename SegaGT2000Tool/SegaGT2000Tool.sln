@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33927.289
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SegaGT2000Tool", "SegaGT2000Tool\SegaGT2000Tool.csproj", "{E9A6F063-1D90-4A59-BFB8-4A7B4A469F77}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E9A6F063-1D90-4A59-BFB8-4A7B4A469F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9A6F063-1D90-4A59-BFB8-4A7B4A469F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9A6F063-1D90-4A59-BFB8-4A7B4A469F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9A6F063-1D90-4A59-BFB8-4A7B4A469F77}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FD42C2D2-8D43-4C23-AD21-F467D4F4B078}
+	EndGlobalSection
+EndGlobal
