@@ -43,7 +43,8 @@ namespace SegaGT_ArchiveTool
             progressBar1.Minimum = 0;
             progressBar1.Value = 0;
 
-            string region = "EMPIRE";
+            //string region = "EMPIRE";
+            string region = "JP";
 
             // Get Values from Master Table
             TOC_Table tocTabl = new TOC_Table();
@@ -89,6 +90,9 @@ namespace SegaGT_ArchiveTool
             else if (bytes.Length > 4 && bytes[0] == 'G' && bytes[1] == 'B' && bytes[2] == 'I' && bytes[3] == 'X')
             {
                 return "pvr";
+            } else if (bytes.Length > 4 && bytes[0] == 'P' && bytes[1] == 'V' && bytes[2] == 'P' && bytes[3] == 'L')
+            {
+                return "pvp";
             }
 
             return "bin";

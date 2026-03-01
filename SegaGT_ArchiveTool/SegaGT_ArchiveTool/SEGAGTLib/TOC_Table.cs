@@ -65,7 +65,27 @@ namespace SegaGT_ArchiveTool.SEGAGTLib
             dataSet.Tables[TBL_NAME].Rows.Add(row);
 
             // JP
-            //huh?
+            row = tocTable.NewRow();
+            row[COL_NAME_REGION] = "JP";
+            str0 = new TOC_Entry();
+            str0.adr = 0xDE8C0;
+            str0.count = 1142;
+            row[COL_NAME_STR0] = str0;
+            str1 = new TOC_Entry();
+            str1.adr = 0xE0C70;
+            str1.count = 259;
+            row[COL_NAME_STR1] = str1;
+            str2 = new TOC_Entry();
+            str2.adr = 0xE1488;
+            str2.count = 241;
+            row[COL_NAME_STR2] = str2;
+            str3 = new TOC_Entry();
+            str3.adr = 0xE1C10;
+            str3.count = 41;
+            row[COL_NAME_STR3] = str3;
+            dataSet.Tables[TBL_NAME].Rows.Add(row);
+
+
         }
     }
 }
