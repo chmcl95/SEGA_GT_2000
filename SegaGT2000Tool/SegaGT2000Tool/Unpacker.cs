@@ -34,11 +34,35 @@ namespace SegaGT2000Tool
         {
             Console.WriteLine("Starting to unpack...");
 
-            Directory.CreateDirectory(_destPath);
-
             TOC_Entry strNInfo = _toc.str3;
+            string arcFileLastChar = Path.GetFileNameWithoutExtension(_inputPath).Substring(3, 1);
+            int strNIdx;
+            if (int.TryParse(arcFileLastChar, out strNIdx) == false)
+            {
+                Console.WriteLine($"Invalid STRn file. InputFile: {Path.GetFileName(_inputPath)}");
+                return;
+            }
+            switch (strNIdx)
+            {
+                case 0:
+                    strNInfo = _toc.str0;
+                    break;
+                case 1:
+                    strNInfo = _toc.str1;
+                    break;
+                case 2:
+                    strNInfo = _toc.str2;
+                    break;
+                case 3:
+                    strNInfo = _toc.str3;
+                    break;
+                default:
+                    Console.WriteLine($"Invalid STRn file. InputFile: {Path.GetFileName(_inputPath)}");
+                    return;
+            }
 
-
+            _destPath = $@"{ _destPath}\{Path.GetFileNameWithoutExtension(_inputPath)}";
+            Directory.CreateDirectory(_destPath);
 
             // exe file
             using (FileStream exeFileStream = new FileStream(_exePath, FileMode.Open, FileAccess.Read))
