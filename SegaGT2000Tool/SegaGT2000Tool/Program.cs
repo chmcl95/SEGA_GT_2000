@@ -78,7 +78,7 @@ namespace SegaGT2000Tool
         [Option('i', "input", Required = true, HelpText = "Input .BIN file like STR1.BIN")]
         public string InputPath { get; set; }
 
-        [Option('e', "exe-path", Required = true, HelpText = "Input exe file. Example: SegaGT.EXE")]
+        [Option('e', "exe-path", Required = true, HelpText = "Input exe file. Example: SegaGT.EXE or 1ST_READ.BIN")]
         public string ExePath { get; set; }
 
         [Option('o', "output", Required = false, HelpText = "Output directory for the extracted files.")]
