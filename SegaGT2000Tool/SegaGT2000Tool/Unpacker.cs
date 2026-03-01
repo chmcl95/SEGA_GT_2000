@@ -34,7 +34,6 @@ namespace SegaGT2000Tool
         {
             Console.WriteLine("Starting to unpack...");
 
-            TOC_Entry strNInfo = _toc.str3;
             string arcFileLastChar = Path.GetFileNameWithoutExtension(_inputPath).Substring(3, 1);
             int strNIdx;
             if (int.TryParse(arcFileLastChar, out strNIdx) == false)
@@ -42,23 +41,11 @@ namespace SegaGT2000Tool
                 Console.WriteLine($"Invalid STRn file. InputFile: {Path.GetFileName(_inputPath)}");
                 return;
             }
-            switch (strNIdx)
+
+            if(strNIdx > 3)
             {
-                case 0:
-                    strNInfo = _toc.str0;
-                    break;
-                case 1:
-                    strNInfo = _toc.str1;
-                    break;
-                case 2:
-                    strNInfo = _toc.str2;
-                    break;
-                case 3:
-                    strNInfo = _toc.str3;
-                    break;
-                default:
-                    Console.WriteLine($"Invalid STRn file. InputFile: {Path.GetFileName(_inputPath)}");
-                    return;
+                Console.WriteLine($"Invalid STRn file. InputFile: {Path.GetFileName(_inputPath)}");
+                return;
             }
 
             _destPath = $@"{ _destPath}\{Path.GetFileNameWithoutExtension(_inputPath)}";
@@ -69,8 +56,8 @@ namespace SegaGT2000Tool
             // arc file
             using (FileStream arcFileStream = new FileStream(_inputPath, FileMode.Open, FileAccess.Read))
             {
-                exeFileStream.Seek(strNInfo.adr, SeekOrigin.Begin);
-                for (int i = 0; i < strNInfo.count; i++)
+                exeFileStream.Seek(_toc.STRn[strNIdx].adr, SeekOrigin.Begin);
+                for (int i = 0; i < _toc.STRn[strNIdx].count; i++)
                 {
                     Entry entry = new Entry();
                     entry.Unpack(exeFileStream);
